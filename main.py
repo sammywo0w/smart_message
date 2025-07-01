@@ -13,7 +13,6 @@ FROM_EMAIL = os.getenv("MAILERSEND_FROM_EMAIL", "noreply@app.smartbuyer.co")
 SUPABASE_URL = os.getenv("SUPABASE_URL")
 SUPABASE_KEY = os.getenv("SUPABASE_SERVICE_ROLE_KEY")
 
-
 @app.post("/incoming-message")
 async def handle_incoming_message(request: Request):
     body = await request.json()
@@ -25,23 +24,25 @@ async def handle_incoming_message(request: Request):
     user_id = record["_id_read_user"]
     message_text = record["text"]
 
-    # Получаем email пользователя из user_data_bubble по _id
+    # Получаем email и имя пользователя по полю firstname_text
     headers = {
         "apikey": SUPABASE_KEY,
         "Authorization": f"Bearer {SUPABASE_KEY}"
     }
 
     supa_resp = requests.get(
-        f"{SUPABASE_URL}/rest/v1/user_data_bubble?select=email&_id=eq.{user_id}",
+        f"{SUPABASE_URL}/rest/v1/user_data_bubble?select=email,firstname_text&_id=eq.{user_id}",
         headers=headers
     )
 
     if supa_resp.status_code != 200 or not supa_resp.json():
         raise HTTPException(status_code=404, detail="User not found")
 
-    recipient_email = supa_resp.json()[0]["email"]
+    user_data = supa_resp.json()[0]
+    recipient_email = user_data["email"]
+    sender_name = user_data.get("firstname_text", "SmartBuyer")
 
-    # Формируем письмо
+    # Отправляем письмо
     payload = {
         "template_id": TEMPLATE_ID,
         "from": {
@@ -54,7 +55,7 @@ async def handle_incoming_message(request: Request):
         "personalization": [{
             "email": recipient_email,
             "data": {
-                "senderName": "SmartBuyer Bot",
+                "senderName": sender_name,
                 "messageContent": message_text
             }
         }]
