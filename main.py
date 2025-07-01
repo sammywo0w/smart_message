@@ -3,6 +3,7 @@ import requests
 import os
 from dotenv import load_dotenv
 
+# Загрузка переменных из .env
 load_dotenv()
 
 app = FastAPI()
@@ -28,6 +29,11 @@ async def handle_incoming_message(request: Request):
             "email": FROM_EMAIL,
             "name": "SmartBuyer"
         },
+        "to": [  # обязательное поле!
+            {
+                "email": recipient_email
+            }
+        ],
         "personalization": [
             {
                 "email": recipient_email,
