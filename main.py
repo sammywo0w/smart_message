@@ -9,13 +9,12 @@ app = FastAPI()
 
 MAILERSEND_API_KEY = os.getenv("MAILERSEND_API_KEY")
 TEMPLATE_ID = os.getenv("MAILERSEND_TEMPLATE_ID")
-FROM_EMAIL = os.getenv("MAILERSEND_FROM_EMAIL", "noreply@yourdomain.com")  # ← заменим ниже
+FROM_EMAIL = os.getenv("MAILERSEND_FROM_EMAIL", "noreply@app.smartbuyer.co")
 
 @app.post("/incoming-message")
 async def handle_incoming_message(request: Request):
     body = await request.json()
 
-    # Ожидаемые поля от Supabase/Bubble:
     sender_name = body.get("sender_name")
     message_text = body.get("message_text")
     recipient_email = body.get("recipient_email")
@@ -29,11 +28,13 @@ async def handle_incoming_message(request: Request):
             "email": FROM_EMAIL,
             "name": "SmartBuyer"
         },
-        "to": [{"email": recipient_email}],
-        "variables": [
-            {"var": "senderName", "value": sender_name},
-            {"var": "messageContent", "value": message_text}
-        ]
+        "to": [{
+            "email": recipient_email,
+            "variables": {
+                "senderName": sender_name,
+                "messageContent": message_text
+            }
+        }]
     }
 
     headers = {
