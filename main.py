@@ -28,13 +28,15 @@ async def handle_incoming_message(request: Request):
             "email": FROM_EMAIL,
             "name": "SmartBuyer"
         },
-        "to": [{
-            "email": recipient_email,
-            "variables": {
-                "senderName": sender_name,
-                "messageContent": message_text
+        "personalization": [
+            {
+                "email": recipient_email,
+                "data": {
+                    "senderName": sender_name,
+                    "messageContent": message_text
+                }
             }
-        }]
+        ]
     }
 
     headers = {
